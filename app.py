@@ -15,6 +15,7 @@ def pobierz_dane_produktu(url):
         
         soup = BeautifulSoup(response.text, 'html.parser')
         
+        # Dostosowane selektory dla sklepu helios-szklo.pl
         nazwa_produktu_tag = soup.find('h1')
         opis_produktu_tag = soup.find('div', id='opis')
         
@@ -81,11 +82,20 @@ with col2:
 mapowanie_modeli = {"Szybki (Flash 1.5)": "gemini-1.5-flash", "Zaawansowany (Pro 1.5)": "gemini-1.5-pro"}
 wybrany_model = mapowanie_modeli[model_wybor]
 
-# ZAKTUALIZOWANE, BARDZIEJ PRECYZYJNE POLECENIA
+# ZAKTUALIZOWANE POLECENIA Z ZAKOŃCZENIEM
 mapowanie_jezykow = {
-    "Polski": {"kod": "pl", "polecenie": "Stwórz krótkie, chwytliwe podsumowanie produktu (3-4 zdania) w języku POLSKIM. WAŻNE: W wygenerowanym tekście wszystkie liczby i cyfry muszą być zapisane słownie (np. 'dwadzieścia mililitrów' zamiast '20 ml')."},
-    "Angielski": {"kod": "en", "polecenie": "Na podstawie poniższych danych w języku polskim, stwórz krótkie, chwytliwe podsumowanie produktu (3-4 zdania) w języku ANGIELSKIM. WAŻNE: W wygenerowanym tekście wszystkie liczby i cyfry muszą być zapisane słownie (np. 'twenty milliliters' zamiast '20 ml')."},
-    "Niemiecki": {"kod": "de", "polecenie": "Na podstawie poniższych danych w języku polskim, stwórz krótkie, chwytliwe podsumowanie produktu (3-4 zdania) w języku NIEMIECKIM. WAŻNE: W wygenerowanym tekście wszystkie liczby i cyfry muszą być zapisane słownie (np. 'zwanzig Milliliter' statt '20 ml')."}
+    "Polski": {
+        "kod": "pl", 
+        "polecenie": "Stwórz krótkie, chwytliwe podsumowanie produktu (3-4 zdania) w języku POLSKIM. WAŻNE: W wygenerowanym tekście wszystkie liczby i cyfry muszą być zapisane słownie (np. 'dwadzieścia mililitrów' zamiast '20 ml'). Zawsze zakończ tekst dokładnie tymi słowami: 'Kupisz go na helios-szklo.pl'."
+    },
+    "Angielski": {
+        "kod": "en", 
+        "polecenie": "Na podstawie poniższych danych w języku polskim, stwórz krótkie, chwytliwe podsumowanie produktu (3-4 zdania) w języku ANGIELSKIM. WAŻNE: W wygenerowanym tekście wszystkie liczby i cyfry muszą być zapisane słownie (np. 'twenty milliliters' zamiast '20 ml'). Zawsze zakończ tekst dokładnie tymi słowami: 'You can buy it at helios-szklo.pl'."
+    },
+    "Niemiecki": {
+        "kod": "de", 
+        "polecenie": "Na podstawie poniższych danych w języku polskim, stwórz krótkie, chwytliwe podsumowanie produktu (3-4 zdania) w języku NIEMIECKIM. WAŻNE: W wygenerowanym tekście wszystkie liczby i cyfry muszą być zapisane słownie (np. 'zwanzig Milliliter' statt '20 ml'). Zawsze zakończ tekst dokładnie tymi słowami: 'Sie können es auf helios-szklo.pl kaufen'."
+    }
 }
 wybrany_jezyk_info = mapowanie_jezykow[jezyk_opcja]
 
