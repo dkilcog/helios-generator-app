@@ -39,4 +39,5 @@ def generuj_podsumowanie(prompt, api_key, model_name):
         response = model.generate_content(prompt)
         st.success("✅ Propozycja tekstu wygenerowana!")
         return response.text
-    except Exception
+    except Exception as e:
+        st.
