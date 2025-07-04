@@ -15,7 +15,6 @@ def pobierz_dane_produktu(url):
         
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Dostosowane selektory dla sklepu helios-szklo.pl
         nazwa_produktu_tag = soup.find('h1')
         opis_produktu_tag = soup.find('div', id='opis')
         
@@ -34,7 +33,6 @@ def generuj_podsumowanie(prompt, api_key, model_name):
     try:
         st.info(f"Krok 2: Generuję podsumowanie (model: {model_name})...")
         genai.configure(api_key=api_key)
-        # Używamy nazwy modelu przekazanej jako argument
         model = genai.GenerativeModel(model_name)
         response = model.generate_content(prompt)
         st.success("✅ Propozycja tekstu wygenerowana!")
@@ -61,7 +59,6 @@ st.set_page_config(page_title="Generator Audio", page_icon="🎙️")
 st.title("🎙️ Generator Podsumowań Audio Produktów")
 st.markdown("Wklej link do produktu, aby wygenerować propozycję tekstu do nagrania audio.")
 
-# Bezpieczne wczytywanie klucza API z menedżera sekretów Streamlit (dla wdrożenia online)
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
     st.success("✅ Klucz API został pomyślnie wczytany.")
@@ -69,84 +66,53 @@ except (KeyError, FileNotFoundError):
     st.error("⚠️ Nie znaleziono klucza API. Jeśli uruchamiasz online, upewnij się, że dodałeś go do sekretów w Streamlit Cloud.")
     api_key = None
 
-# Użycie "pamięci" sesji do przechowywania tekstu
 if 'summary_text' not in st.session_state:
     st.session_state.summary_text = ""
 
-# --- Krok 1: Pola do wpisania danych i generowanie tekstu ---
 st.markdown("---")
 st.subheader("Krok 1: Wygeneruj propozycję tekstu")
-
 url = st.text_input("Wklej tutaj URL do strony produktu")
-
 col1, col2 = st.columns(2)
-
 with col1:
-    jezyk_opcja = st.selectbox(
-        "Wybierz język podsumowania:",
-        ("Polski", "Angielski", "Niemiecki")
-    )
-
+    jezyk_opcja = st.selectbox("Wybierz język podsumowania:", ("Polski", "Angielski", "Niemiecki"))
 with col2:
-    model_wybor = st.selectbox(
-        "Wybierz model AI:",
-        ("Szybki (Flash 1.5)", "Zaawansowany (Pro 1.5)")
-    )
+    model_wybor = st.selectbox("Wybierz model AI:", ("Szybki (Flash 1.5)", "Zaawansowany (Pro 1.5)"))
 
-mapowanie_modeli = {
-    "Szybki (Flash 1.5)": "gemini-1.5-flash",
-    "Zaawansowany (Pro 1.5)": "gemini-1.5-pro"
-}
+mapowanie_modeli = {"Szybki (Flash 1.5)": "gemini-1.5-flash", "Zaawansowany (Pro 1.5)": "gemini-1.5-pro"}
 wybrany_model = mapowanie_modeli[model_wybor]
 
+# ZAKTUALIZOWANE, BARDZIEJ PRECYZYJNE POLECENIA
 mapowanie_jezykow = {
-    "Polski": {"kod": "pl", "polecenie": "Stwórz krótkie, chwytliwe podsumowanie produktu (3-4 zdania), idealne do nagrania audio. WAŻNE: W wygenerowanym tekście wszystkie liczby i cyfry muszą być zapisane słownie (np. 'dwadzieścia mililitrów' zamiast '20 ml')."},
-    "Angielski": {"kod": "en", "polecenie": "Create a short, catchy product summary (3-4 sentences), perfect for an audio recording. IMPORTANT: In the generated text, all numbers and digits must be written out as words (e.g., 'twenty milliliters' instead of '20 ml')."},
-    "Niemiecki": {"kod": "de", "polecenie": "Erstellen Sie eine kurze, eingängige Produktzusammenfassung (3-4 Sätze), die sich perfekt für eine Audioaufnahme eignet. WICHTIG: Im generierten Text müssen alle Zahlen und Ziffern als Wörter ausgeschrieben werden (z. B. 'zwanzig Milliliter' statt '20 ml')."}
+    "Polski": {"kod": "pl", "polecenie": "Stwórz krótkie, chwytliwe podsumowanie produktu (3-4 zdania) w języku POLSKIM. WAŻNE: W wygenerowanym tekście wszystkie liczby i cyfry muszą być zapisane słownie (np. 'dwadzieścia mililitrów' zamiast '20 ml')."},
+    "Angielski": {"kod": "en", "polecenie": "Na podstawie poniższych danych w języku polskim, stwórz krótkie, chwytliwe podsumowanie produktu (3-4 zdania) w języku ANGIELSKIM. WAŻNE: W wygenerowanym tekście wszystkie liczby i cyfry muszą być zapisane słownie (np. 'twenty milliliters' zamiast '20 ml')."},
+    "Niemiecki": {"kod": "de", "polecenie": "Na podstawie poniższych danych w języku polskim, stwórz krótkie, chwytliwe podsumowanie produktu (3-4 zdania) w języku NIEMIECKIM. WAŻNE: W wygenerowanym tekście wszystkie liczby i cyfry muszą być zapisane słownie (np. 'zwanzig Milliliter' statt '20 ml')."}
 }
 wybrany_jezyk_info = mapowanie_jezykow[jezyk_opcja]
 
 if st.button("✍️ Generuj tekst"):
-    if not api_key:
-        st.warning("Klucz API nie został wczytany. Sprawdź konfigurację sekretów.")
-    elif not url.startswith('http'):
-        st.warning("Proszę wpisać poprawny adres URL.")
+    if not api_key: st.warning("Klucz API nie został wczytany. Sprawdź konfigurację sekretów.")
+    elif not url.startswith('http'): st.warning("Proszę wpisać poprawny adres URL.")
     else:
         with st.spinner(f"Generuję propozycję tekstu przy użyciu modelu {model_wybor}..."):
             tekst_produktu = pobierz_dane_produktu(url)
             if tekst_produktu:
-                prompt_dla_ai = f"Na podstawie tych danych: '{tekst_produktu}', {wybrany_jezyk_info['polecenie']}"
+                prompt_dla_ai = f"Polecenie: {wybrany_jezyk_info['polecenie']}. Dane wejściowe: '{tekst_produktu}'"
                 podsumowanie = generuj_podsumowanie(prompt_dla_ai, api_key, wybrany_model)
                 st.session_state.summary_text = podsumowanie
 
-# --- Krok 2: Edycja tekstu i generowanie audio ---
 if st.session_state.summary_text:
     st.markdown("---")
     st.subheader("Krok 2: Zaakceptuj lub edytuj tekst")
-    
-    edited_text = st.text_area(
-        "Możesz teraz edytować tekst przed wygenerowaniem audio:",
-        value=st.session_state.summary_text,
-        height=150
-    )
-
+    edited_text = st.text_area("Możesz teraz edytować tekst przed wygenerowaniem audio:", value=st.session_state.summary_text, height=150)
     if st.button("🎙️ Generuj plik audio z tego tekstu"):
         with st.spinner("Tworzę plik audio..."):
-            if not edited_text.strip():
-                st.warning("Pole tekstowe jest puste. Nie można wygenerować audio.")
+            if not edited_text.strip(): st.warning("Pole tekstowe jest puste. Nie można wygenerować audio.")
             else:
                 plik_audio = generuj_audio(edited_text, kod_jezyka=wybrany_jezyk_info['kod'])
-                
                 if plik_audio:
                     st.subheader("Odsłuchaj i pobierz:")
                     with open(plik_audio, "rb") as audio_file:
                         audio_bytes = audio_file.read()
                         st.audio(audio_bytes, format='audio/mpeg')
-                    
                     with open(plik_audio, "rb") as file_to_download:
-                        st.download_button(
-                           label="Pobierz plik MP3",
-                           data=file_to_download,
-                           file_name="podsumowanie_audio.mp3",
-                           mime='audio/mpeg'
-                        )
+                        st.download_button("Pobierz plik MP3", data=file_to_download, file_name="podsumowanie_audio.mp3", mime='audio/mpeg')
